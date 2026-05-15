@@ -68,18 +68,24 @@ if st.session_state.is_admin:
         conn.commit()
         st.rerun()
 
-# جلب الرسائل
-messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
+# 1. جلب الرسائل (نضيف السطر ده عشان نضمن إنه مش بيقرأ من الكاش)
+c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC")
+messages = c.fetchall()
 
-# منطق الإشعارات (Toast + Browser Notification)
+# 2. منطق الإشعارات (تعديل بسيط عشان التزامن)
 if 'last_count' not in st.session_state:
     st.session_state.last_count = len(messages)
 
+# التحقق من وجود رسائل جديدة
 if len(messages) > st.session_state.last_count:
     last_m = messages[-1]
+    # لو الرسالة مش بتاعتي، طلع الإشعار
     if last_m[0] != st.session_state.username:
         st.toast(f"📩 رسالة جديدة من {last_m[0]}")
+        # دي عشان الإشعار يظهر في المتصفح حتى لو إنت مش باصص عليه
         components.html(f"<script>window.parent.notifyMe('{last_m[0]}', '{last_m[1] if last_m[3]=='text' else 'مرفق جديد'}')</script>", height=0)
+    
+    # تحديث العداد فوراً
     st.session_state.last_count = len(messages)
 
 # عرض كل الرسائل (نص، صور، فيديو، صوت)
