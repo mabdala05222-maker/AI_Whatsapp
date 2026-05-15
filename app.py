@@ -63,11 +63,21 @@ st.title(f"💬 مرحباً {st.session_state.username}")
 
 if st.session_state.is_admin:
     if st.sidebar.button("🗑️ مسح الشات"):
-        c.execute("DELETE FROM messages")
-        conn.commit()
-        st.rerun()
-
+       # 1. جلب الرسائل من قاعدة البيانات
 messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
+
+# 2. تفعيل التحديث التلقائي (عشان يحس بالرسائل الجديدة لوحده)
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(interval=5000, key="datarefresh")
+
+# 3. منطق الإشعارات
+if 'last_count' not in st.session_state:
+    st.session_state.last_count = len(messages)
+
+# لو عدد الرسائل زاد عن آخر مرة
+if len(messages) > st.session_state.last_count:
+    st.toast("📩 وصلت رسالة جديدة!")
+    st.session_state.last_count = len(messages)
 
 # منطق الإشعارات
 if 'last_count' not in st.session_state:
