@@ -64,7 +64,7 @@ st.title(f"💬 مرحباً {st.session_state.username}")
 if st.session_state.is_admin:
     if st.sidebar.button("🗑️ مسح الشات"):
        # 1. جلب الرسائل من قاعدة البيانات
-messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
+	messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
 
 # 2. تفعيل التحديث التلقائي (عشان يحس بالرسائل الجديدة لوحده)
 from streamlit_autorefresh import st_autorefresh
