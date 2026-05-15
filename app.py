@@ -51,7 +51,7 @@ if not st.session_state.authenticated:
         pwd = st.text_input("كلمة السر:", type="password")
         user = st.text_input("اسمك:")
         if st.button("دخول"):
-            if pwd in ["123", "admin99"]:
+            if pwd in ["1234", "admin99"]:
                 st.session_state.authenticated = True
                 st.session_state.username = user
                 st.session_state.is_admin = (pwd == "admin99")
