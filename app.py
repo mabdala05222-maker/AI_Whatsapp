@@ -19,13 +19,14 @@ conn.commit()
 
 # --- 2. تهيئة الصفحة والستايل ---
 st.set_page_config(page_title="WhatsApp Pro", page_icon="💬", layout="centered")
+
+# التحديث التلقائي للصفحة كل 5 ثواني
 st_autorefresh(interval=5000, key="chatupdate")
 
 st.markdown("""
     <style>
     .stChatMessage { background-color: #e4f2fe; border-radius: 15px; padding: 10px; margin: 5px 0; }
     .stTextInput { border-radius: 20px; }
-    /* إخفاء شريط الرفع التقليدي الكبير */
     .stFileUploader section { padding: 0; }
     </style>
     <script>
@@ -44,7 +45,7 @@ if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown("## 🔒  المحادثات")
+    st.markdown("## 🔒 المحادثات")
     with st.container():
         pwd = st.text_input("كلمة السر:", type="password")
         user = st.text_input("اسمك:")
@@ -58,37 +59,32 @@ if not st.session_state.authenticated:
                 st.error("خطأ!")
     st.stop()
 
-# --- 4. عرض الرسائل والإشعارات ---
+# --- 4. معالجة البيانات وعرض الرسائل ---
 st.title(f"💬 مرحباً {st.session_state.username}")
 
+# زر مسح الشات للأدمن فقط
 if st.session_state.is_admin:
     if st.sidebar.button("🗑️ مسح الشات"):
-       # 1. جلب الرسائل من قاعدة البيانات
-    messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
+        c.execute("DELETE FROM messages")
+        conn.commit()
+        st.rerun()
 
-# 2. تفعيل التحديث التلقائي (عشان يحس بالرسائل الجديدة لوحده)
-from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=5000, key="datarefresh")
+# جلب الرسائل
+messages = c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC").fetchall()
 
-# 3. منطق الإشعارات
-if 'last_count' not in st.session_state:
-    st.session_state.last_count = len(messages)
-
-# لو عدد الرسائل زاد عن آخر مرة
-if len(messages) > st.session_state.last_count:
-    st.toast("📩 وصلت رسالة جديدة!")
-    st.session_state.last_count = len(messages)
-
-# منطق الإشعارات
+# منطق الإشعارات (Toast + Browser Notification)
 if 'last_count' not in st.session_state:
     st.session_state.last_count = len(messages)
 
 if len(messages) > st.session_state.last_count:
     last_m = messages[-1]
+    # إظهار إشعار لو الرسالة مش من المستخدم الحالي
     if last_m[0] != st.session_state.username:
+        st.toast(f"📩 رسالة جديدة من {last_m[0]}")
         components.html(f"<script>window.parent.notifyMe('{last_m[0]}', '{last_m[1] if last_m[3]=='text' else 'مرفق جديد'}')</script>", height=0)
     st.session_state.last_count = len(messages)
 
+# عرض الرسائل في الشات
 for m in messages:
     with st.chat_message("user" if m[0] == st.session_state.username else "assistant"):
         st.write(f"**{m[0]}**")
@@ -97,17 +93,15 @@ for m in messages:
         elif m[3] == "video": st.video(m[1])
         elif m[3] == "audio": st.audio(m[1])
         st.caption(f"🕒 {m[2]}")
-# --- 5. منطقة الإرسال المطورة (مع ميزة مسح النص تلقائياً) ---
-st.markdown("---")
 
-# تقسيم الصفحة لأعمدة: عمود للملفات، وعمود للفورم (نص + إرسال)، وعمود للمايك
+# --- 5. منطقة الإرسال ---
+st.markdown("---")
 col_file, col_main, col_voice = st.columns([0.8, 4, 0.8])
 
 with col_file:
     up_file = st.file_uploader("📎", type=["png", "jpg", "jpeg", "mp4"], label_visibility="collapsed")
 
 with col_main:
-    # استخدام st.form مع clear_on_submit=True هو السر!
     with st.form("my_form", clear_on_submit=True):
         f_col1, f_col2 = st.columns([4, 1])
         with f_col1:
@@ -117,17 +111,6 @@ with col_main:
 
 with col_voice:
     audio = mic_recorder(start_prompt="🎤", stop_prompt="✅", key='mic')
-
-# --- 6. معالجة الإرسال (تعديل بسيط ليناسب الفورم) ---
-now = datetime.now().strftime("%I:%M %p")
-
-# إرسال النص (سيتم مسحه من الخانة فور الضغط على الزر بفضل clear_on_submit)
-if btn_send and txt_input:
-    c.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (st.session_state.username, txt_input, now, "text"))
-    conn.commit()
-    st.rerun()
-
-# (باقي كود معالجة الملفات والريكورد يظل كما هو بالأسفل)
 
 # --- 6. معالجة الإرسال ---
 now = datetime.now().strftime("%I:%M %p")
