@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3
+import pytz
 import os
 import hashlib
 from datetime import datetime
@@ -117,7 +118,10 @@ with col_voice:
     audio = mic_recorder(start_prompt="🎤", stop_prompt="✅", key='mic')
 
 # --- 6. معالجة الإرسال ---
-now = datetime.now().strftime("%I:%M %p")
+# تحديد المنطقة الزمنية للقاهرة
+egypt_tz = pytz.timezone('Africa/Cairo')
+# تجيب الوقت الحالي في القاهرة وتنسقه
+now = datetime.now(egypt_tz).strftime("%I:%M %p")
 
 # إرسال النص
 if btn_send and txt_input:
