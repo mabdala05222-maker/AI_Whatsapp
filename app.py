@@ -21,7 +21,7 @@ conn.commit()
 st.set_page_config(page_title="WhatsApp Pro", page_icon="💬", layout="centered")
 
 # التحديث التلقائي (السر في ظهور الرسائل عند الطرفين)
-st_autorefresh(interval=3000, key="chatupdate")
+st_autorefresh(interval=1000, key="chatupdate")
 
 st.markdown("""
     <style>
