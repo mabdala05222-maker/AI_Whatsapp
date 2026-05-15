@@ -63,13 +63,16 @@ if not st.session_state.authenticated:
 # --- 4. عرض الرسائل والإشعارات ---
 st.title(f"💬 مرحباً {st.session_state.username}")
 
+# سطر 66
 if st.session_state.is_admin:
+    # سطر 67 (لاحظ الفراغ اللي في الأول هنا)
     if st.sidebar.button("🗑️ مسح الشات"):
+        # السطور دي داخلة لجوه أكتر (تبع الزرار)
         c.execute("DELETE FROM messages")
         conn.commit()
         st.rerun()
 
-# 1. جلب الرسائل (نضيف السطر ده عشان نضمن إنه مش بيقرأ من الكاش)
+# سطر 73 (يرجع يبدأ من أول السطر خالص زي ما أنت عامله)
 c.execute("SELECT user, message, time, msg_type FROM messages ORDER BY ROWID ASC")
 messages = c.fetchall()
 
