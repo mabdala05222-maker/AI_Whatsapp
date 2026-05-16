@@ -113,7 +113,7 @@ if not st.session_state.username:
         st.session_state.is_admin = bool(admin_check[0]) if admin_check else False
         st.rerun()
     st.stop()
-# 4. الشريط الجانبي (Sidebar) - قايمة الشاتات والتحكم
+# 4. الشريط الجانبي (Sidebar) - قايمة الشاتات والتحكم 
 with st.sidebar:
     st.markdown(f"<h3 style='color:white;'>مرحباً، {st.session_state.username} 💬</h3>", unsafe_allow_html=True)
     st.markdown("<hr style='border-color:#222c32;'>", unsafe_allow_html=True)
